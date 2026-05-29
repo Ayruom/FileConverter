@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+__pycache__/
+*.py[cod]
+.venv/
+
+.env
+.env.local
+.DS_Store

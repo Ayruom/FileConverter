@@ -1,0 +1,35 @@
+services:
+  api:
+    build: ./apps/api
+    ports:
+      - "8000:8000"
+    environment:
+      TEMP_STORAGE: local
+      FRONTEND_URL: http://localhost:3000
+      MAX_FILE_MB: 100
+      MAX_BATCH_FILES: 20
+      MAX_BATCH_MB: 250
+      MAX_OUTPUT_MB: 500
+      BATCH_CONCURRENCY: 3
+      CLEANUP_TTL_MINUTES: 10
+      TEMP_FILE_TTL_MINUTES: 60
+      CLEANUP_INTERVAL_SECONDS: 300
+      ANALYTICS_PATH: /data/fileflux_analytics.json
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_BACKEND: redis
+      RATE_LIMIT_REQUESTS: 30
+      RATE_LIMIT_WINDOW_SECONDS: 60
+      RATE_LIMIT_RETENTION_HOURS: 24
+      REDIS_URL: redis://redis:6379/0
+      TRUST_PROXY_HEADERS: "false"
+    depends_on:
+      - redis
+    volumes:
+      - api_analytics:/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  api_analytics:
