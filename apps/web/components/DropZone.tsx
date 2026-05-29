@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useCallback, useMemo, useRef, useState } from "react";
+import { ChangeEvent, MouseEvent, PointerEvent, useCallback, useMemo, useRef, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { FileStack, FileUp, Lock, PackageOpen, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { ConversionProgress } from "@/components/ConversionProgress";
@@ -39,6 +39,13 @@ function supportedConversionForFile(file: File, conversion: Conversion) {
 type DropZoneProps = {
   conversion?: Conversion;
 };
+
+function debugDropZone(event: string, details: Record<string, unknown> = {}) {
+  console.info(`[DropZone] ${event}`, {
+    at: new Date().toISOString(),
+    ...details
+  });
+}
 
 export function DropZone({ conversion }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -130,14 +137,48 @@ export function DropZone({ conversion }: DropZoneProps) {
     noKeyboard: true
   });
 
-  function openFilePicker() {
-    fileInputRef.current?.click();
+  function openFilePicker(source: string) {
+    const input = fileInputRef.current;
+    debugDropZone("openFilePicker", {
+      source,
+      hasInput: Boolean(input),
+      inputType: input?.type,
+      inputMultiple: input?.multiple,
+      inputDisabled: input?.disabled,
+      inputConnected: input?.isConnected
+    });
+    input?.click();
   }
 
   function selectFilesFromInput(event: ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(event.target.files ?? []);
+    debugDropZone("inputChange", {
+      count: selectedFiles.length,
+      names: selectedFiles.map((file) => file.name)
+    });
     onDrop(selectedFiles);
     event.target.value = "";
+  }
+
+  function logPointerDown(event: PointerEvent<HTMLDivElement>) {
+    const target = event.target instanceof Element ? event.target : null;
+    debugDropZone("pointerDown", {
+      button: event.button,
+      pointerType: event.pointerType,
+      targetTag: target?.tagName,
+      targetText: target?.textContent?.slice(0, 80)
+    });
+  }
+
+  function logClickAndOpen(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target instanceof Element ? event.target : null;
+    debugDropZone("click", {
+      button: event.button,
+      defaultPrevented: event.defaultPrevented,
+      targetTag: target?.tagName,
+      targetText: target?.textContent?.slice(0, 80)
+    });
+    openFilePicker("dropzone-click");
   }
 
   const targetFormat = targetExtension(selectedConversion.to);
@@ -262,11 +303,13 @@ export function DropZone({ conversion }: DropZoneProps) {
     <section className="space-y-6">
       <div
         {...getRootProps()}
-        onClick={openFilePicker}
+        onPointerDownCapture={logPointerDown}
+        onClick={logClickAndOpen}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            openFilePicker();
+            debugDropZone("keyboardOpen", { key: event.key });
+            openFilePicker("keyboard");
           }
         }}
         role="button"
