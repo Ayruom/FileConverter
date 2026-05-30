@@ -36,6 +36,17 @@ function supportedConversionForFile(file: File, conversion: Conversion) {
   return ext === conversion.from.toLowerCase() || (SOURCE_ALIASES[conversion.from] ?? []).includes(ext);
 }
 
+function brandedResultName(filename: string | undefined) {
+  if (!filename) {
+    return undefined;
+  }
+
+  return filename
+    .replace(/^fileflux_combined\.pdf$/i, "all-files-convertor-combined.pdf")
+    .replace(/^fileflux_converted_files\.zip$/i, "all-files-convertor-converted-files.zip")
+    .replace(/^fileflux\./i, "all-files-convertor.");
+}
+
 type DropZoneProps = {
   conversion?: Conversion;
 };
@@ -212,6 +223,9 @@ export function DropZone({ conversion }: DropZoneProps) {
 
   const targetFormat = targetExtension(selectedConversion.to);
   const canCombine = targetFormat === "pdf";
+  const isWorking = status === "uploading" || status === "processing";
+  const isComplete = status === "complete";
+  const showSetupControls = !isWorking && !isComplete;
   const canConvert = useMemo(
     () => Boolean(files.length && selectedConversion && (outputMode === "separate" || canCombine)),
     [files.length, selectedConversion, outputMode, canCombine]
@@ -269,7 +283,7 @@ export function DropZone({ conversion }: DropZoneProps) {
             setStatus("complete");
             setStage("Done");
             setProgress(100);
-            setResultName(job.resultName);
+            setResultName(brandedResultName(job.resultName));
           }
 
           if (job.status === "error") {
@@ -330,6 +344,7 @@ export function DropZone({ conversion }: DropZoneProps) {
 
   return (
     <section className="space-y-6">
+      {showSetupControls ? (
       <div
         data-testid="all-files-convertor-dropzone"
         onPointerDownCapture={logPointerDown}
@@ -398,10 +413,11 @@ export function DropZone({ conversion }: DropZoneProps) {
           </div>
         </div>
       </div>
+      ) : null}
 
-      <FormatPicker selected={selectedConversion} onSelect={selectConversion} />
+      {showSetupControls ? <FormatPicker selected={selectedConversion} onSelect={selectConversion} /> : null}
 
-      {files.length > 1 ? (
+      {showSetupControls && files.length > 1 ? (
         <div className="mx-auto grid w-full max-w-2xl gap-3 sm:grid-cols-2">
           <button
             type="button"
@@ -439,6 +455,7 @@ export function DropZone({ conversion }: DropZoneProps) {
         </div>
       ) : null}
 
+      {showSetupControls ? (
       <div className="flex flex-wrap justify-center gap-3">
         <button
           type="button"
@@ -460,6 +477,7 @@ export function DropZone({ conversion }: DropZoneProps) {
           </button>
         ) : null}
       </div>
+      ) : null}
 
       {error ? <p className="mx-auto max-w-2xl rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
 
@@ -498,7 +516,20 @@ export function DropZone({ conversion }: DropZoneProps) {
         </div>
       ) : null}
 
-      {status === "complete" ? <DownloadCard onDownload={downloadConvertedFile} filename={resultName} state={downloadState} /> : null}
+      {isComplete ? (
+        <>
+          <DownloadCard onDownload={downloadConvertedFile} filename={resultName} state={downloadState} />
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={resetConverter}
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-zinc-200 hover:border-accent"
+            >
+              Convert more files
+            </button>
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }
