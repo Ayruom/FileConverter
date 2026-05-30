@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, PointerEvent, useCallback, useMemo, useRef, useState } from "react";
+import { ChangeEvent, MouseEvent, PointerEvent, useCallback, useMemo, useRef, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { FileStack, FileUp, Lock, PackageOpen, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { ConversionProgress } from "@/components/ConversionProgress";
@@ -22,6 +22,7 @@ const SUPPORTED_SOURCES = new Set(
     ...(SOURCE_ALIASES[nextConversion.from] ?? [])
   ])
 );
+const FILE_INPUT_ID = "fileflux-file-input";
 
 function formatMegabytes(bytes: number) {
   return `${Math.round(bytes / 1024 / 1024)}MB`;
@@ -170,6 +171,24 @@ export function DropZone({ conversion }: DropZoneProps) {
     });
   }
 
+  function logInputClick(event: MouseEvent<HTMLInputElement>) {
+    event.stopPropagation();
+    debugDropZone("inputClick", {
+      defaultPrevented: event.defaultPrevented,
+      inputConnected: event.currentTarget.isConnected,
+      inputMultiple: event.currentTarget.multiple
+    });
+  }
+
+  function logChooseLabelClick(event: MouseEvent<HTMLLabelElement>) {
+    event.stopPropagation();
+    debugDropZone("chooseLabelClick", {
+      defaultPrevented: event.defaultPrevented,
+      inputConnected: fileInputRef.current?.isConnected,
+      labelFor: event.currentTarget.htmlFor
+    });
+  }
+
   const targetFormat = targetExtension(selectedConversion.to);
   const canCombine = targetFormat === "pdf";
   const canConvert = useMemo(
@@ -292,6 +311,7 @@ export function DropZone({ conversion }: DropZoneProps) {
     <section className="space-y-6">
       <div
         {...getRootProps()}
+        data-testid="fileflux-dropzone"
         onPointerDownCapture={logPointerDown}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -308,20 +328,17 @@ export function DropZone({ conversion }: DropZoneProps) {
       >
         <input
           ref={fileInputRef}
+          id={FILE_INPUT_ID}
+          data-testid="fileflux-file-input"
           aria-label="Choose files to convert"
-          className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
+          className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-[0.01]"
           multiple
-          onClick={(event) => {
-            debugDropZone("inputClick", {
-              defaultPrevented: event.defaultPrevented,
-              inputConnected: event.currentTarget.isConnected,
-              inputMultiple: event.currentTarget.multiple
-            });
-          }}
+          onClick={logInputClick}
+          onPointerDown={(event) => event.stopPropagation()}
           onChange={selectFilesFromInput}
           type="file"
         />
-        <div className="pointer-events-none flex flex-col items-center justify-center">
+        <div className="pointer-events-none relative z-30 flex flex-col items-center justify-center">
           <FileUp className="mb-4 h-10 w-10 text-accent2" />
           <p className="text-xl font-semibold">
             {files.length === 0 ? "Drop your files here" : files.length === 1 ? files[0].name : `${files.length} files selected`}
@@ -329,6 +346,14 @@ export function DropZone({ conversion }: DropZoneProps) {
           <p className="mt-2 max-w-md text-sm text-muted">
             Select one file or many. Files are validated locally, sent over TLS, processed in isolation, and purged after download.
           </p>
+          <label
+            htmlFor={FILE_INPUT_ID}
+            onClick={logChooseLabelClick}
+            onPointerDown={(event) => event.stopPropagation()}
+            className="pointer-events-auto relative z-30 mt-4 inline-flex cursor-pointer items-center rounded-lg border border-accent/70 bg-accent/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent/25"
+          >
+            Choose files
+          </label>
           {files.length > 1 ? (
             <div className="mt-4 max-w-md text-xs text-zinc-400">
               {files.slice(0, 3).map((nextFile) => nextFile.name).join(", ")}
