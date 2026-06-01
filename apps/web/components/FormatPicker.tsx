@@ -1,6 +1,5 @@
 "use client";
 
-import { Flame } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Conversion, CONVERSIONS, labelFor } from "@/lib/formats";
 
@@ -82,24 +81,43 @@ export function FormatPicker({ selected, onSelect }: FormatPickerProps) {
       {rankedConversions.map((conversion) => {
         const active = selected?.slug === conversion.slug;
         const hot = hotSlugs.has(conversion.slug);
+        const label = conversionLabel(conversion);
+
+        if (hot) {
+          return (
+            <div key={conversion.slug} className="badge-btn-container">
+              <span className="btn-badge">
+                <span className="badge-icon" aria-hidden="true">
+                  🔥
+                </span>
+                Popular
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelect(conversion)}
+                title="Popular with users"
+                className={`popular-btn btn-border-sweep ${active ? "popular-btn-active" : ""}`}
+              >
+                <span className="btn-content">
+                  <span>{label}</span>
+                </span>
+              </button>
+            </div>
+          );
+        }
+
         return (
           <button
             key={conversion.slug}
             type="button"
             onClick={() => onSelect(conversion)}
-            title={hot ? "Popular with users" : undefined}
             className={`inline-flex min-h-10 items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition ${
               active
-                ? hot
-                  ? "hot-format-button hot-format-button-active"
-                  : "border-accent bg-accent text-white"
-                : hot
-                  ? "hot-format-button"
-                  : "border-border bg-surface text-zinc-300 hover:border-accent hover:text-white"
+                ? "border-accent bg-accent text-white"
+                : "border-border bg-surface text-zinc-300 hover:border-accent hover:text-white"
             }`}
           >
-            {hot ? <Flame className="hot-format-icon h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
-            <span className="relative z-10">{conversionLabel(conversion)}</span>
+            <span>{label}</span>
           </button>
         );
       })}
