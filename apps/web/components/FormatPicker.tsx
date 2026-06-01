@@ -91,15 +91,15 @@ export function FormatPicker({ selected, onSelect }: FormatPickerProps) {
             className={`inline-flex min-h-10 items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition ${
               active
                 ? hot
-                  ? "border-amber-300 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 text-white shadow-[0_0_24px_rgba(249,115,22,0.36)]"
+                  ? "hot-format-button hot-format-button-active"
                   : "border-accent bg-accent text-white"
                 : hot
-                  ? "border-orange-400/80 bg-gradient-to-r from-red-500/25 via-orange-500/20 to-amber-300/15 text-orange-50 shadow-[0_0_22px_rgba(249,115,22,0.18)] hover:border-amber-200 hover:text-white"
+                  ? "hot-format-button"
                   : "border-border bg-surface text-zinc-300 hover:border-accent hover:text-white"
             }`}
           >
-            {hot ? <Flame className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
-            <span>{conversionLabel(conversion)}</span>
+            {hot ? <Flame className="hot-format-icon h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : null}
+            <span className="relative z-10">{conversionLabel(conversion)}</span>
           </button>
         );
       })}
