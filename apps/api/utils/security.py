@@ -81,6 +81,7 @@ ALLOWED_TARGETS = {
 
 MAX_FILE_SIZE_BYTES = int(os.getenv("MAX_FILE_MB", "100")) * 1024 * 1024
 MAX_FILENAME_LENGTH = 120
+UPLOAD_READ_CHUNK_BYTES = 1024 * 1024
 
 
 def sanitize_filename(filename: str) -> str:
@@ -111,3 +112,19 @@ def validate_file(file: UploadFile, target_format: str):
 
     if target_format.lower() not in ALLOWED_TARGETS:
         raise HTTPException(status_code=400, detail=f"Target format not supported: {target_format}")
+
+
+async def read_upload_with_limit(file: UploadFile, limit_bytes: int = MAX_FILE_SIZE_BYTES) -> bytes:
+    chunks: list[bytes] = []
+    total = 0
+
+    while True:
+        chunk = await file.read(UPLOAD_READ_CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > limit_bytes:
+            raise HTTPException(status_code=400, detail=f"File exceeds {limit_bytes // 1024 // 1024}MB limit")
+        chunks.append(chunk)
+
+    return b"".join(chunks)

@@ -15,7 +15,7 @@ from pypdf import PdfReader, PdfWriter
 from services.cleanup import JOB_TTL_SECONDS, mark_job
 from services.analytics import popular_conversions, record_conversion
 from services.converter import dispatch, is_supported_conversion, source_extension
-from utils.security import sanitize_filename, validate_file
+from utils.security import sanitize_filename, validate_file, read_upload_with_limit
 from utils.storage import delete_job
 
 router = APIRouter()
@@ -46,7 +46,7 @@ async def start_conversion(
         raise HTTPException(status_code=400, detail="Job ID must be a valid UUID v4") from exc
 
     validate_file(file, targetFormat)
-    content = await file.read()
+    content = await read_upload_with_limit(file)
     filename = sanitize_filename(file.filename or "upload")
     _validate_supported_conversion(filename, targetFormat)
 
@@ -84,7 +84,13 @@ async def start_batch_conversion(
         validate_file(upload, targetFormat)
         filename = sanitize_filename(upload.filename or "upload")
         _validate_supported_conversion(filename, targetFormat)
-        content = await upload.read()
+        remaining_batch_bytes = MAX_BATCH_SIZE_BYTES - total_upload_size
+        if remaining_batch_bytes <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Batch uploads can be up to {MAX_BATCH_SIZE_BYTES // 1024 // 1024}MB total",
+            )
+        content = await read_upload_with_limit(upload, min(remaining_batch_bytes, MAX_BATCH_SIZE_BYTES))
         total_upload_size += len(content)
         if total_upload_size > MAX_BATCH_SIZE_BYTES:
             raise HTTPException(
@@ -121,7 +127,13 @@ async def run_conversion(job_id: str, content: bytes, filename: str, target_form
         asyncio.get_event_loop().call_later(JOB_TTL_SECONDS, delete_job, job_id, jobs)
     except Exception as exc:
         created_at = jobs.get(job_id, {}).get("createdAt")
-        jobs[job_id] = mark_job("error", 0, "Failed", createdAt=created_at, errorMessage=str(exc))
+        jobs[job_id] = mark_job(
+            "error",
+            0,
+            "Failed",
+            createdAt=created_at,
+            errorMessage="Conversion failed. Please check the file and try again.",
+        )
         logger.warning("conversion_failed", extra={"job_id": job_id, "target": target_format.lower(), "error": str(exc)})
 
 
@@ -169,9 +181,9 @@ async def run_batch_conversion(
                             "filename": filename,
                             "status": "error",
                             "progress": 0,
-                            "errorMessage": str(exc),
+                            "errorMessage": "Conversion failed for this file.",
                         }
-                    raise RuntimeError(f"{filename}: {exc}") from exc
+                    raise RuntimeError(f"{filename} failed to convert") from exc
 
                 async with lock:
                     completed += 1
@@ -227,7 +239,7 @@ async def run_batch_conversion(
             0,
             "Failed",
             createdAt=created_at,
-            errorMessage=str(exc),
+            errorMessage=str(exc) if str(exc).endswith("failed to convert") else "Batch conversion failed. Please try again.",
             files=current_files,
         )
         logger.warning(

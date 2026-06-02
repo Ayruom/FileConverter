@@ -79,6 +79,26 @@ class IpRateLimiter:
 
 
 class RedisIpRateLimiter:
+    LUA_CHECK = """
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local cutoff = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local retention = tonumber(ARGV[4])
+local member = ARGV[5]
+
+redis.call("ZREMRANGEBYSCORE", key, 0, cutoff)
+local count = redis.call("ZCARD", key)
+if count >= limit then
+  local oldest = redis.call("ZRANGE", key, 0, 0, "WITHSCORES")
+  return {0, oldest[2] or now}
+end
+
+redis.call("ZADD", key, now, member)
+redis.call("EXPIRE", key, retention)
+return {1, 0}
+"""
+
     def __init__(self, requests: int, window_seconds: int, retention_hours: int, redis_url: str):
         self.requests = requests
         self.window_seconds = window_seconds
@@ -95,19 +115,22 @@ class RedisIpRateLimiter:
         now = time.time()
         key = f"all-files-convertor:rate:{sha256(client_id.encode('utf-8')).hexdigest()}"
         cutoff = now - self.window_seconds
+        member = f"{now}:{os.urandom(4).hex()}"
+        allowed, oldest_score = await client.eval(
+            self.LUA_CHECK,
+            1,
+            key,
+            now,
+            cutoff,
+            self.requests,
+            self.retention_seconds,
+            member,
+        )
 
-        await client.zremrangebyscore(key, 0, cutoff)
-        count = await client.zcard(key)
-        oldest = await client.zrange(key, 0, 0, withscores=True)
-
-        if count >= self.requests:
-            oldest_score = oldest[0][1] if oldest else now
+        if int(allowed) != 1:
+            oldest_score = float(oldest_score or now)
             retry_after = max(1, int(self.window_seconds - (now - oldest_score)))
             return False, retry_after
-
-        member = f"{now}:{os.urandom(4).hex()}"
-        await client.zadd(key, {member: now})
-        await client.expire(key, self.retention_seconds)
 
         return True, 0
 

@@ -1,0 +1,10 @@
+.git
+.github
+analysis
+node_modules
+apps/web/node_modules
+apps/web/.next
+apps/api/__pycache__
+apps/api/**/__pycache__
+.DS_Store
+*.pyc

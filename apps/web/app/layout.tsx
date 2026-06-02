@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { CookieBanner } from "@/components/CookieBanner";
+import { ConsentScripts } from "@/components/ConsentScripts";
 import { Footer } from "@/components/Footer";
 import { NavBar } from "@/components/NavBar";
 
@@ -32,23 +32,13 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-  const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
-
   return (
     <html lang="en">
       <body className="font-sans">
-        {adsenseClient ? (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-            strategy="lazyOnload"
-          />
-        ) : null}
-        {plausibleDomain ? (
-          <Script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" strategy="afterInteractive" />
-        ) : null}
+        <ConsentScripts
+          adsenseClient={process.env.NEXT_PUBLIC_ADSENSE_CLIENT}
+          plausibleDomain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+        />
         <NavBar />
         {children}
         <Footer />

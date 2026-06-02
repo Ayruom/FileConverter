@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from routers import convert
 from services.cleanup import run_periodic_cleanup
-from utils.rate_limit import check_rate_limit, close_rate_limiter, _env_bool, rate_limiter
+from utils.rate_limit import check_rate_limit, close_rate_limiter, _env_bool, rate_limiter, RATE_LIMIT_BACKEND
 
 if os.getenv("SENTRY_DSN"):
     sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"), traces_sample_rate=0.05)
@@ -25,8 +25,31 @@ app.add_middleware(
 app.include_router(convert.router)
 
 
+def _is_production() -> bool:
+    return os.getenv("APP_ENV", os.getenv("ENV", "")).strip().lower() in {"prod", "production"}
+
+
+def _validate_production_config():
+    if not _is_production():
+        return
+
+    errors: list[str] = []
+    frontend_url = os.getenv("FRONTEND_URL", "")
+    if not frontend_url.startswith("https://"):
+        errors.append("FRONTEND_URL must be an https:// origin in production")
+    if RATE_LIMIT_BACKEND != "redis":
+        errors.append("RATE_LIMIT_BACKEND=redis is required in production")
+    if os.getenv("TEMP_STORAGE", "local") == "local" and os.getenv("ACK_SINGLE_INSTANCE_LOCAL_STORAGE") != "true":
+        errors.append("Set ACK_SINGLE_INSTANCE_LOCAL_STORAGE=true or configure shared storage before production launch")
+    if _env_bool("TRUST_PROXY_HEADERS") and os.getenv("TRUSTED_PROXY_BOUNDARY") != "true":
+        errors.append("Set TRUSTED_PROXY_BOUNDARY=true when enabling TRUST_PROXY_HEADERS in production")
+    if errors:
+        raise RuntimeError("Unsafe production configuration: " + "; ".join(errors))
+
+
 @app.on_event("startup")
 async def start_periodic_cleanup():
+    _validate_production_config()
     app.state.cleanup_stop_event = asyncio.Event()
     app.state.cleanup_task = asyncio.create_task(run_periodic_cleanup(convert.jobs, app.state.cleanup_stop_event))
 

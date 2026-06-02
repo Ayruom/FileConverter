@@ -55,3 +55,7 @@ Run this matrix before release and after conversion-library upgrades.
 - Unsupported extension is rejected.
 - Unsupported source to target pair is rejected.
 - Rate limit returns `429` with `Retry-After`.
+- Concurrent requests over the Redis rate-limit window are rejected consistently.
+- HTML with external `src`, `href`, or CSS `url(...)` references is rejected.
+- SVG with external `href`, `src`, or CSS `url(...)` references is rejected.
+- Production startup fails when `APP_ENV=production` is set without Redis rate limiting and an explicit local-storage acknowledgement.

@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -14,6 +15,14 @@ FORMAT_MAP = {
     "tiff": "TIFF",
     "gif": "GIF",
 }
+
+
+def _reject_external_svg_references(content: bytes):
+    text = content[:262144].decode("utf-8", errors="ignore")
+    if re.search(r"""(?:href|src)\s*=\s*["']?\s*(?:https?|ftp|file|data):""", text, re.IGNORECASE):
+        raise ValueError("External resources are disabled for SVG conversion")
+    if re.search(r"""url\(\s*["']?\s*(?:https?|ftp|file|data):""", text, re.IGNORECASE):
+        raise ValueError("External resources are disabled for SVG conversion")
 
 
 async def image_convert(content: bytes, filename: str, target: str) -> tuple[str, str]:
@@ -75,6 +84,7 @@ async def heic_to_jpg(content: bytes, filename: str, target: str) -> tuple[str, 
 async def svg_convert(content: bytes, filename: str, target: str) -> tuple[str, str]:
     import cairosvg
 
+    _reject_external_svg_references(content)
     stem = Path(filename).stem
     target = target.lower()
     out_path = os.path.join(tempfile.mkdtemp(prefix="ff_out_"), f"{stem}.{target}")

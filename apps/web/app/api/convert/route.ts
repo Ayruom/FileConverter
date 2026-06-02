@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerApiUrl } from "@/lib/server-api";
 
 export async function POST(request: NextRequest) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const apiUrl = getServerApiUrl();
   const response = await fetch(`${apiUrl}/convert`, {
     method: "POST",
     body: await request.formData()

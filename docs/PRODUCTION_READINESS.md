@@ -7,6 +7,7 @@ This checklist covers the production-facing configuration that should be complet
 - `NEXT_PUBLIC_SITE_URL` must be the canonical production site URL, for example `https://allfilesconvertor.com`.
 - `FRONTEND_URL` must be the exact production origin for CORS.
 - `NEXT_PUBLIC_API_URL` must point at the deployed API origin or internal proxy.
+- `NEXT_PUBLIC_API_URL` must be HTTPS in production unless the web container reaches the API through a private internal network and `ALLOW_INTERNAL_API_HTTP=true` is set.
 - `SENTRY_DSN` should be set for API errors.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` should match the production domain when analytics are enabled.
 - `NEXT_PUBLIC_ADSENSE_CLIENT` should only be set after the site is approved for ads.
@@ -28,6 +29,8 @@ REDIS_URL=redis://...
 
 Use Redis or Upstash so all API instances share the same counters. The Redis limiter stores a hashed IP key and request timestamps, then expires each key within the configured retention window.
 
+Redis rate checks are performed atomically with a Lua script so concurrent requests cannot exceed the configured window.
+
 Set `TRUST_PROXY_HEADERS=true` only when the API is behind a trusted proxy or CDN that controls `CF-Connecting-IP` or `X-Forwarded-For`.
 
 ## Storage
@@ -41,6 +44,8 @@ Production options:
 - Large traffic: use S3-compatible storage with lifecycle policies and keep `TEMP_FILE_TTL_MINUTES` conservative.
 
 The current job tracker is in memory, so run one API worker per container until job state is moved to Redis or a database.
+
+When `APP_ENV=production`, the API refuses to start with local temp storage unless `ACK_SINGLE_INSTANCE_LOCAL_STORAGE=true` is set. This is an explicit acknowledgement that the deployment must use one API worker/container or sticky routing until shared job/result storage is implemented.
 
 ## Cleanup
 
@@ -65,10 +70,19 @@ Completed jobs are removed after the job TTL. Abandoned conversion temp folders 
 
 - Keep `MAX_FILE_MB`, `MAX_BATCH_FILES`, `MAX_BATCH_MB`, and `MAX_OUTPUT_MB` set.
 - Keep MIME and extension checks enabled.
+- API uploads are stream-read with hard byte limits even when the client omits `UploadFile.size`.
+- HTML and SVG conversions reject external `http`, `https`, `ftp`, `file`, and `data` references before rendering.
 - Keep filename sanitization enabled before writing output names.
 - Run conversion workers as a non-root user.
 - Keep LibreOffice and conversion libraries patched.
 - Do not trust proxy IP headers unless the proxy boundary is controlled.
+- Run converters in a network-restricted container or behind egress firewall rules for defense in depth.
+
+## Maintenance
+
+- GitHub Actions runs Next lint/build, `npm audit --audit-level=high`, and `pip-audit` for API dependencies.
+- Keep Docker images tagged immutably in production and roll back by redeploying the previous known-good image tag.
+- Docker Compose includes API, Redis, and web services with healthchecks/restart policies. Keep the published ports bound to `127.0.0.1` and put HTTPS termination in front with a reverse proxy, load balancer, or CDN.
 
 ## SEO Launch Checks
 
