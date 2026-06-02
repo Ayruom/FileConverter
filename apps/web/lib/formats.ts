@@ -13,8 +13,6 @@ export const CONVERSIONS: Conversion[] = [
   { from: "PDF", to: "DOCX", slug: "pdf-to-word", icon: "FileText", priority: 1 },
   { from: "PDF", to: "PPTX", slug: "pdf-to-powerpoint", icon: "Presentation", priority: 0.9 },
   { from: "PDF", to: "XLSX", slug: "pdf-to-excel", icon: "Table", priority: 0.95 },
-  { from: "PDF", to: "JPG", slug: "pdf-to-jpg", icon: "Image", priority: 1 },
-  { from: "PDF", to: "PNG", slug: "pdf-to-png", icon: "Image", priority: 1 },
   { from: "PDF", to: "TXT", slug: "pdf-to-text", icon: "FileCode", priority: 0.85 },
   { from: "PDF", to: "HTML", slug: "pdf-to-html", icon: "Code", priority: 0.75 },
   { from: "DOCX", to: "PDF", slug: "word-to-pdf", icon: "FilePdf", priority: 1 },

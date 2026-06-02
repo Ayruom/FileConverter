@@ -8,8 +8,7 @@ const staticRoutes = [
   { loc: "/", changefreq: "weekly", priority: 1 },
   { loc: "/about", changefreq: "monthly", priority: 0.6 },
   { loc: "/privacy", changefreq: "monthly", priority: 0.5 },
-  { loc: "/terms", changefreq: "monthly", priority: 0.5 },
-  { loc: "/api-docs", changefreq: "monthly", priority: 0.4 }
+  { loc: "/terms", changefreq: "monthly", priority: 0.5 }
 ];
 
 const routes = [

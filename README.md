@@ -37,6 +37,12 @@ Set `ANALYTICS_PATH=/tmp/all_files_convertor_analytics.json` locally, or point i
 
 Multiple files can be downloaded as separate converted files in a ZIP, or merged into one PDF when the destination format is PDF.
 
+## PDF Library Licensing
+
+The backend uses `pypdf` for PDF text extraction and PDF merging. `pypdf` is BSD-3-Clause licensed, which avoids the AGPL/commercial-license obligation that would apply to PyMuPDF/MuPDF in a closed-source hosted service.
+
+PDF-to-image rendering is not enabled in this build because the previous renderer depended on PyMuPDF. Re-enable that feature only after choosing a renderer with licensing terms that fit the production plan, or after buying the appropriate commercial license.
+
 ## Rate Limiting and IP Retention
 
 The API applies an in-memory IP rate limit by default:

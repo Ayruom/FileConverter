@@ -3,8 +3,6 @@ const CONVERSIONS = [
   { slug: "pdf-to-word", priority: 1 },
   { slug: "pdf-to-powerpoint", priority: 0.9 },
   { slug: "pdf-to-excel", priority: 0.95 },
-  { slug: "pdf-to-jpg", priority: 1 },
-  { slug: "pdf-to-png", priority: 1 },
   { slug: "pdf-to-text", priority: 0.85 },
   { slug: "pdf-to-html", priority: 0.75 },
   { slug: "word-to-pdf", priority: 1 },

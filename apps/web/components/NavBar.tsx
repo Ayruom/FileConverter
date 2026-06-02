@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Github } from "lucide-react";
 
 export function NavBar() {
   return (
@@ -15,17 +14,8 @@ export function NavBar() {
           <Link href="/privacy" className="hover:text-white">
             Privacy
           </Link>
-          <Link href="/api-docs" className="hover:text-white">
-            API
-          </Link>
         </div>
-        <a
-          href="https://github.com"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface hover:border-accent"
-          aria-label="GitHub"
-        >
-          <Github className="h-4 w-4" />
-        </a>
+        <div className="h-9 w-9" aria-hidden="true" />
       </nav>
     </header>
   );

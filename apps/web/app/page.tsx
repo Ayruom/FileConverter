@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Lock, ShieldCheck, Trash2 } from "lucide-react";
 import { AdUnit } from "@/components/AdUnit";
 import { DropZone } from "@/components/DropZone";
@@ -60,17 +59,6 @@ export default function Home() {
       <section className="px-4 pb-16">
         <SponsorBanner />
       </section>
-
-      <footer className="border-t border-border px-4 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>Built with privacy in mind.</p>
-          <div className="flex gap-5">
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/about">About</Link>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

@@ -10,7 +10,7 @@ from pathlib import Path
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
-import fitz
+from pypdf import PdfReader, PdfWriter
 
 from services.cleanup import JOB_TTL_SECONDS, mark_job
 from services.analytics import popular_conversions, record_conversion
@@ -264,15 +264,14 @@ def _stage_pdf_for_merge(content: bytes, filename: str) -> tuple[str, str]:
 def _merge_pdfs(paths: list[str], result_name: str) -> tuple[str, str]:
     out_dir = Path(tempfile.mkdtemp(prefix="ff_batch_"))
     output_path = out_dir / result_name
-    merged = fitz.open()
+    writer = PdfWriter()
 
-    try:
-        for path in paths:
-            with fitz.open(path) as source:
-                merged.insert_pdf(source)
-        merged.save(output_path)
-    finally:
-        merged.close()
+    for path in paths:
+        reader = PdfReader(path)
+        for page in reader.pages:
+            writer.add_page(page)
+    with output_path.open("wb") as output:
+        writer.write(output)
 
     return str(output_path), result_name
 

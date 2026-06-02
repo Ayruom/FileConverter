@@ -1,7 +1,7 @@
 from services.image import heic_to_jpg, image_convert, image_to_pdf, svg_convert
 from services.libreoffice import convert_with_libreoffice
 from services.office import csv_to_xlsx, docx_to_html, docx_to_text, xlsx_to_csv
-from services.pdf import pdf_to_docx, pdf_to_html, pdf_to_image, pdf_to_text
+from services.pdf import pdf_to_docx, pdf_to_html, pdf_to_text
 from services.web import html_to_pdf, txt_to_docx, txt_to_pdf
 
 SUPPORTED_CONVERSIONS = [
@@ -9,8 +9,6 @@ SUPPORTED_CONVERSIONS = [
     {"from": "pdf", "to": "docx"},
     {"from": "pdf", "to": "pptx"},
     {"from": "pdf", "to": "xlsx"},
-    {"from": "pdf", "to": "jpg"},
-    {"from": "pdf", "to": "png"},
     {"from": "pdf", "to": "txt"},
     {"from": "pdf", "to": "html"},
     {"from": "docx", "to": "pdf"},
@@ -64,9 +62,6 @@ async def dispatch(content: bytes, filename: str, target: str) -> tuple[str, str
 
     if ext == "pdf" and target in ("docx", "word"):
         return await pdf_to_docx(content, filename)
-
-    if ext == "pdf" and target in ("jpg", "jpeg", "png"):
-        return await pdf_to_image(content, filename, target)
 
     if ext == "pdf" and target == "txt":
         return await pdf_to_text(content, filename)

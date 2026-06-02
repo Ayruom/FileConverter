@@ -2,13 +2,71 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
       <h1 className="text-4xl font-semibold">Privacy Policy</h1>
-      <div className="mt-8 space-y-5 leading-7 text-zinc-300">
-        <p>All Files Convertor processes files in isolated containers and never writes uploads to permanent storage.</p>
-        <p>Converted files are purged when a download completes, and completed jobs expire after the configured job cleanup window.</p>
-        <p>Abandoned temporary processing folders are removed by a scheduled cleanup process. Local defaults keep completed jobs for 10 minutes and abandoned temp folders for up to 60 minutes.</p>
-        <p>No file contents are logged. IP addresses may be used for rate limiting and operational protection, then purged or expired within 24 hours.</p>
-        <p>For production rate limiting, IP addresses are hashed before being stored in Redis with a short expiry window.</p>
-        <p>AdSense may set cookies for advertising. All Files Convertor does not sell personal data to third parties.</p>
+      <p className="mt-3 text-sm text-muted">Last updated: June 1, 2026</p>
+      <div className="mt-8 space-y-7 leading-7 text-zinc-300">
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">What this service does</h2>
+          <p>
+            All Files Convertor lets you upload files, convert them to another supported format, and download the
+            converted result. The service is designed for temporary processing, not file hosting or long-term storage.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">Files you upload</h2>
+          <p>
+            Uploaded files are used only to complete the conversion you request. They are processed in temporary working
+            folders and are not meant to be kept permanently. Converted files are removed after download or after the
+            configured cleanup window expires.
+          </p>
+          <p>
+            The current project defaults keep completed jobs for about 10 minutes and remove abandoned temporary folders
+            after about 60 minutes. These windows may be adjusted to keep the service reliable.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">Operational data</h2>
+          <p>
+            File contents are not logged. The service may use technical data such as IP address, request time, file size,
+            selected conversion type, job status, and error details to run conversions, prevent abuse, measure popular
+            tools, and keep the service available.
+          </p>
+          <p>
+            IP addresses may be used for rate limiting and operational protection. In production, the Redis rate limiter
+            hashes IP addresses before storing rate-limit keys, and those keys expire within the configured retention
+            window.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">Cookies, ads, and analytics</h2>
+          <p>
+            All Files Convertor does not require accounts. A cookie may be stored to remember cookie consent. If ads are
+            enabled, Google AdSense may set cookies or use similar technologies for advertising. If privacy-friendly
+            analytics are enabled, they are used to understand traffic and service health.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">Sharing and selling data</h2>
+          <p>
+            All Files Convertor does not sell your files or personal data. Files may pass through infrastructure providers
+            that host, store, secure, or deliver the service, but only as needed to operate the conversion workflow.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">Your choices</h2>
+          <p>
+            Do not upload files that you do not want processed by the service. If you need help with privacy questions,
+            deletion concerns, or a report about the service, contact Ayroum at{" "}
+            <a href="mailto:Ayruom.Dev@gmail.com" className="text-accent2 hover:text-white">
+              Ayruom.Dev@gmail.com
+            </a>
+            .
+          </p>
+        </section>
       </div>
     </main>
   );
