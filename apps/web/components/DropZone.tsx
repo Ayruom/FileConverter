@@ -478,7 +478,7 @@ export function DropZone({ conversion }: DropZoneProps) {
       <div className="flex flex-wrap justify-center gap-3">
         <button
           type="button"
-          disabled={!canConvert || status === "uploading" || status === "processing"}
+          disabled={!canConvert || isWorking}
           onClick={convertFile}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-bg disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
         >
@@ -489,7 +489,7 @@ export function DropZone({ conversion }: DropZoneProps) {
           <button
             type="button"
             onClick={resetConverter}
-            disabled={status === "uploading" || status === "processing"}
+            disabled={isWorking}
             className="inline-flex min-h-11 items-center justify-center rounded-md border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reset
