@@ -1,15 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Script from "next/script";
 
 const CONSENT_COOKIE = "all-files-convertor-cookie-consent";
 
 function hasAcceptedCookies() {
+  if (typeof document === "undefined") {
+    return false;
+  }
   return document.cookie
     .split(";")
     .map((cookie) => cookie.trim())
     .some((cookie) => cookie === `${CONSENT_COOKIE}=true`);
+}
+
+function subscribeToCookieConsent(callback: () => void) {
+  const interval = window.setInterval(callback, 1000);
+  return () => window.clearInterval(interval);
 }
 
 export function ConsentScripts({
@@ -19,13 +27,7 @@ export function ConsentScripts({
   adsenseClient?: string;
   plausibleDomain?: string;
 }) {
-  const [accepted, setAccepted] = useState(false);
-
-  useEffect(() => {
-    setAccepted(hasAcceptedCookies());
-    const interval = window.setInterval(() => setAccepted(hasAcceptedCookies()), 1000);
-    return () => window.clearInterval(interval);
-  }, []);
+  const accepted = useSyncExternalStore(subscribeToCookieConsent, hasAcceptedCookies, () => false);
 
   if (!accepted) {
     return null;

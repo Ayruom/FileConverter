@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AnalyticsTile } from "@/components/AnalyticsTile";
 import type { ConversionAnalytics } from "@/components/AnalyticsTile";
 import { CONVERSIONS } from "@/lib/formats";
@@ -17,14 +17,24 @@ async function fetchPopularAnalytics() {
   return response.json() as Promise<AnalyticsResponse>;
 }
 
+function subscribeToLocation() {
+  return () => {};
+}
+
+function getIsLocalHost() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
 export function PopularConversions() {
   const [analytics, setAnalytics] = useState<ConversionAnalytics[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [isLocal, setIsLocal] = useState(false);
+  const isLocal = useSyncExternalStore(subscribeToLocation, getIsLocalHost, () => false);
 
   useEffect(() => {
     let cancelled = false;
-    setIsLocal(["localhost", "127.0.0.1", "::1"].includes(window.location.hostname));
 
     async function refresh() {
       try {
