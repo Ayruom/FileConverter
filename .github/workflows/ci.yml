@@ -39,13 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: cyclonedx
-          output: repo-sbom.cdx.json
-          exit-code: "0"
+      - run: docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs --format cyclonedx --output /repo/repo-sbom.cdx.json /repo
       - uses: actions/upload-artifact@v4
         with:
           name: repo-sbom
@@ -66,10 +60,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln,secret,misconfig,license
-          severity: HIGH,CRITICAL
-          exit-code: "1"
+      - run: docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs --scanners vuln,secret,misconfig,license --severity HIGH,CRITICAL --exit-code 1 /repo
