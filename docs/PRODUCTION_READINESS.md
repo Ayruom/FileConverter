@@ -11,6 +11,7 @@ This checklist covers the production-facing configuration that should be complet
 - `SENTRY_DSN` should be set for API errors.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` should match the production domain when analytics are enabled.
 - `NEXT_PUBLIC_ADSENSE_CLIENT` should only be set after the site is approved for ads.
+- Start production configuration from `.env.production.example`, then replace the placeholder domains and secrets with deployment-specific values.
 
 ## Rate Limiting
 
@@ -62,13 +63,17 @@ Completed jobs are removed after the job TTL. Abandoned conversion temp folders 
 ## Observability
 
 - Enable Sentry with `SENTRY_DSN`.
+- Keep Sentry PII scrubbing enabled; do not attach uploaded file content or converted output to Sentry events.
 - Track conversion failures by source format, target format, and sanitized filename only.
 - Do not log file contents, raw uploads, or downloaded output.
 - Monitor API CPU, memory, temp disk usage, Redis latency, and conversion duration.
+- Add alerts for conversion failure spikes, cleanup failures, temp disk pressure, Redis latency, and API healthcheck failures.
 
 ## Security
 
+- Terminate TLS at the reverse proxy, load balancer, or CDN and keep HSTS enabled by the web app or proxy.
 - Keep `MAX_FILE_MB`, `MAX_BATCH_FILES`, `MAX_BATCH_MB`, and `MAX_OUTPUT_MB` set.
+- Enforce request body limits at the CDN/reverse proxy before requests reach the API container.
 - Keep MIME and extension checks enabled.
 - API uploads are stream-read with hard byte limits even when the client omits `UploadFile.size`.
 - HTML and SVG conversions reject external `http`, `https`, `ftp`, `file`, and `data` references before rendering.
@@ -77,12 +82,16 @@ Completed jobs are removed after the job TTL. Abandoned conversion temp folders 
 - Keep LibreOffice and conversion libraries patched.
 - Do not trust proxy IP headers unless the proxy boundary is controlled.
 - Run converters in a network-restricted container or behind egress firewall rules for defense in depth.
+- Keep CPU, memory, process, and request concurrency limits at the container/orchestrator layer. The Compose file includes baseline CPU, memory, and PID limits for web, API, and Redis.
+- Put a CDN/WAF in front of the app; application rate limiting is not a DDoS boundary.
 
 ## Maintenance
 
-- GitHub Actions runs Next lint/build, `npm audit --audit-level=high`, and `pip-audit` for API dependencies.
+- GitHub Actions runs Next lint/build, `npm audit --audit-level=high`, `pip-audit`, API regression tests, SBOM generation, and Trivy filesystem/config/secret/license scanning.
 - Keep Docker images tagged immutably in production and roll back by redeploying the previous known-good image tag.
 - Docker Compose includes API, Redis, and web services with healthchecks/restart policies. Keep the published ports bound to `127.0.0.1` and put HTTPS termination in front with a reverse proxy, load balancer, or CDN.
+- Use an orchestrator, load balancer, or managed platform for rolling deploys and rollback. Compose restart policies improve recovery but are not zero-downtime deployment by themselves.
+- Track the Next/PostCSS moderate advisory in dependency maintenance and upgrade as soon as the patched Next dependency tree is available.
 
 ## SEO Launch Checks
 

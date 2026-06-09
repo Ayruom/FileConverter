@@ -59,3 +59,5 @@ Run this matrix before release and after conversion-library upgrades.
 - HTML with external `src`, `href`, or CSS `url(...)` references is rejected.
 - SVG with external `href`, `src`, or CSS `url(...)` references is rejected.
 - Production startup fails when `APP_ENV=production` is set without Redis rate limiting and an explicit local-storage acknowledgement.
+- Filename traversal, Unicode, long filename, and missing `UploadFile.size` regressions are covered by API tests.
+- Web proxy routes, including analytics, use the shared production API URL validation helper.

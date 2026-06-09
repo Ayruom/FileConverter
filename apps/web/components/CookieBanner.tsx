@@ -8,12 +8,14 @@ export function CookieBanner() {
       buttonText="Accept"
       declineButtonText="Reject"
       enableDeclineButton
+      expires={180}
       cookieName="all-files-convertor-cookie-consent"
       style={{ background: "#13131a", borderTop: "1px solid #2a2a3a" }}
       buttonStyle={{ background: "#ffffff", color: "#0a0a0f", borderRadius: "6px", fontWeight: 700 }}
       declineButtonStyle={{ background: "#2a2a3a", color: "#ffffff", borderRadius: "6px", fontWeight: 700 }}
     >
-      All Files Convertor does not use account cookies. AdSense may set cookies for ads.
+      All Files Convertor does not use account cookies. AdSense may set cookies for ads. Change your choice any time
+      from the Privacy Policy.
     </CookieConsent>
   );
 }

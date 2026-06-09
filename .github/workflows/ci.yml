@@ -29,3 +29,47 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip pip-audit
       - run: pip-audit -r apps/api/requirements.txt
+      - run: pip-audit -r apps/api/requirements.txt --format cyclonedx-json --output python-sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-sbom
+          path: python-sbom.cdx.json
+
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: repo-sbom.cdx.json
+          exit-code: "0"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repo-sbom
+          path: repo-sbom.cdx.json
+
+  api-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip pytest
+      - run: python -m pip install -r apps/api/requirements.txt
+      - run: PYTHONPATH=apps/api pytest apps/api/tests
+
+  container-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig,license
+          severity: HIGH,CRITICAL
+          exit-code: "1"

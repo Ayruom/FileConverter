@@ -2,7 +2,7 @@ export default function TermsPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
       <h1 className="text-4xl font-semibold">Terms of Service</h1>
-      <p className="mt-3 text-sm text-muted">Last updated: June 1, 2026</p>
+      <p className="mt-3 text-sm text-muted">Last updated: June 10, 2026</p>
       <div className="mt-8 space-y-7 leading-7 text-zinc-300">
         <section className="space-y-3">
           <h2 className="text-xl font-semibold text-white">Using All Files Convertor</h2>

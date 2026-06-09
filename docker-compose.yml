@@ -6,22 +6,36 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 512m
+    pids_limit: 256
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      NEXT_PUBLIC_API_URL: http://api:8000
-      ALLOW_INTERNAL_API_HTTP: "true"
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://api:8000}
+      ALLOW_INTERNAL_API_HTTP: ${ALLOW_INTERNAL_API_HTTP:-true}
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
   api:
     build: ./apps/api
     ports:
       - "127.0.0.1:8000:8000"
     restart: unless-stopped
+    cpus: 2.0
+    mem_limit: 2g
+    pids_limit: 512
     environment:
-      TEMP_STORAGE: local
-      FRONTEND_URL: http://localhost:3000
+      APP_ENV: ${APP_ENV:-development}
+      TEMP_STORAGE: ${TEMP_STORAGE:-local}
+      ACK_SINGLE_INSTANCE_LOCAL_STORAGE: ${ACK_SINGLE_INSTANCE_LOCAL_STORAGE:-false}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       MAX_FILE_MB: 100
       MAX_BATCH_FILES: 20
       MAX_BATCH_MB: 250
@@ -37,7 +51,8 @@ services:
       RATE_LIMIT_WINDOW_SECONDS: 60
       RATE_LIMIT_RETENTION_HOURS: 24
       REDIS_URL: redis://redis:6379/0
-      TRUST_PROXY_HEADERS: "false"
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
+      TRUSTED_PROXY_BOUNDARY: ${TRUSTED_PROXY_BOUNDARY:-false}
     depends_on:
       redis:
         condition: service_healthy
@@ -52,6 +67,9 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 512m
+    pids_limit: 128
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
